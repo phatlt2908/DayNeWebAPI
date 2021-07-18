@@ -57,10 +57,10 @@ register = async function (req, res) {
     try {
         let user = req.body;
 
-        // Check username existed
-        const existedUser = await pool.query(authRepo.GET_USER_BY_USERNAME, [user.username]);
+        // Check username or email existed
+        const existedUser = await pool.query(authRepo.GET_USER_BY_USERNAME_OR_EMAIL, [user.username.toLowerCase(), user.email.toLowerCase()]);
         if (existedUser.rows.length) {
-            throw "username is existed";
+            throw "username or email is existed";
         }
 
         // Generate regist
@@ -75,13 +75,13 @@ register = async function (req, res) {
         user["world"] = config.defaultWorld;
 
         let queryParams = [
-            user.username,
-            user.username,
+            user.username.toLowerCase(),
+            user.username.toLowerCase(),
             user.password,
             user.regDate,
             user.regIp,
             user.world,
-            user.email
+            user.email.toLowerCase()
         ];
 
         pool.query(authRepo.REGISTER_NEW_USER, queryParams);
@@ -89,6 +89,36 @@ register = async function (req, res) {
     } catch (err) {
         console.error("Can not register new user", err);
         res.status(400).send({ mes: "Can not register new user" });
+    }
+}
+
+checkUsername = async function (req, res) {
+    try {
+        let username = req.query.username;
+
+        // Check username existed
+        const user = await pool.query(authRepo.GET_USER_BY_USERNAME, [username.toLowerCase()]);
+        let isExist = !!user.rows.length;
+
+        res.status(200).send({ isExist: isExist });
+    } catch (err) {
+        console.error("Can not check this username: ", err);
+        res.status(400).send({ mes: "Can not check this username" });
+    }
+}
+
+checkEmail = async function (req, res) {
+    try {
+        let email = req.query.email;
+
+        // Check email existed
+        const user = await pool.query(authRepo.GET_USER_BY_EMAIL, [email.toLowerCase()]);
+        let isExist = !!user.rows.length;
+
+        res.status(200).send({ isExist: isExist });
+    } catch (err) {
+        console.error("Can not check this email: ", err);
+        res.status(400).send({ mes: "Can not check this email" });
     }
 }
 
@@ -126,5 +156,6 @@ checkToken = function (req, res, next) {
 module.exports = {
     login,
     register,
-    checkToken
+    checkToken,
+    checkUsername
 }
