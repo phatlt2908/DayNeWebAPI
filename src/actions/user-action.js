@@ -7,7 +7,7 @@ changePassword = async function (req, res) {
 
     // check required
     if (!request.username || !request.oldPassword || !request.newPassword) {
-        return res.status(400).send({ mes: 'Incomplete information' });
+        return res.status(400).send({ mes: 'Thông tin nhập không đầy đủ' });
     }
 
     try {
@@ -16,7 +16,7 @@ changePassword = async function (req, res) {
 
         // Check exist username
         if (!userSqlResult.rows.length) {
-            throw "username is not exist";
+            throw "Tài khoản không tồn tại";
         }
 
         const user = userSqlResult.rows[0];
@@ -24,7 +24,7 @@ changePassword = async function (req, res) {
         // Check password
         const isMatch = bcrypt.compareSync(request.oldPassword, user.password);
         if (!isMatch) {
-            throw "password is incorrect";
+            throw "Mật khẩu không đúng";
         }
 
         // Generate new password
